@@ -12,7 +12,21 @@ are the URLs App Store Connect and Google Play point at.
 npm install
 npm run dev                 # http://localhost:3000
 npm run verify              # lint + typecheck + build (+ claims check)
+npm run build && npm start  # production, on a free port (see below)
 ```
+
+### Which port `npm start` uses
+
+`npm start` never collides with something already running:
+
+1. `PORT=8080 npm start` uses exactly that port, and exits if it is taken.
+2. Otherwise it reuses the port saved in `.port` by the previous run, if still free, so a
+   reverse-proxy config or a bookmark keeps working across restarts.
+3. Otherwise it picks a random free port between 20000 and 39999 and saves it to `.port`.
+
+It prints the URLs on start (localhost and every LAN address). `HOST=127.0.0.1 npm start`
+accepts connections only through a reverse proxy; the default `0.0.0.0` is reachable by
+`IP:port`.
 
 ## Deploy (Vercel)
 
@@ -26,7 +40,13 @@ npm run verify              # lint + typecheck + build (+ claims check)
 Preview deployments serve `Disallow: /` in robots.txt so they never compete with production
 in search.
 
-**Other hosts:** `npm run build && npm start` (Node ≥ 22), with `NEXT_PUBLIC_SITE_URL` set.
+**Own server (PM2):** Node ≥ 22, then
+
+```bash
+git pull && npm ci && NEXT_PUBLIC_SITE_URL=https://your-domain npm run build
+pm2 start ecosystem.config.cjs && pm2 save      # first time; later: pm2 restart tasuke-web
+cat .port                                       # the port it chose — point nginx here
+```
 
 After the first deploy, point App Store Connect at it:
 
@@ -71,9 +91,11 @@ npm run sync:legal -- --check              # exits 1 if out of date
 - **Blog:** add `content/blog/NN-name.mdx` with frontmatter (`slug`, `title`, `description`,
   `date`, optional `updated`, `tags`, `draft`). Invalid frontmatter fails the build. Posts
   appear in the index and the sitemap and get `BlogPosting` JSON-LD automatically.
-- **Screenshots:** `public/screenshots/*.webp` are real captures from the app's
-  `integration_test/screenshots_test.dart`. Replace them with the iPhone set from the app
-  repo's `ios-screenshots.yml` workflow when it exists (same names).
+- **Screenshots:** `src/assets/screenshots/*.webp` are real captures from the app's
+  `integration_test/screenshots_test.dart`, imported through `src/content/screenshots.ts`.
+  Replace a file in place (same name) and its URL changes with its content, so no cache
+  shows the old one. Swap in the iPhone set from the app repo's `ios-screenshots.yml`
+  workflow when it exists.
 - **Store badges:** `public/badges/` hold Apple's and Google's official artwork, unmodified
   (Google's PNG only had its transparent margin trimmed). Do not recolour or redraw them.
 
@@ -88,4 +110,3 @@ src/lib/            SEO metadata, JSON-LD builders, blog loader
 content/            blog posts and legal texts (MDX)
 scripts/            claims check, legal sync
 ```
-# tasuke-web

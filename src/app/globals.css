@@ -1,0 +1,199 @@
+@import "tailwindcss";
+@plugin "@tailwindcss/typography";
+
+/*
+ * Brand tokens, taken from the app (lib/app/theme/tasuke_colors.dart) and
+ * darkened where text sits on them. Contrast ratios are against white:
+ *   brand-600 #1A6BEF  white text 4.78:1 (AA)  — buttons
+ *   brand-700 #1559D6  6.12:1 (AA)             — links, small blue text
+ *   ink-3     #5B6B86  5.40:1 (AA)             — the lightest body text allowed
+ * brand-500 (#2B7FFF, the app's primary) is decoration only: 3.76:1.
+ */
+@theme {
+  --color-brand-50: #f5f9ff;
+  --color-brand-100: #eaf2ff;
+  --color-brand-200: #d6e6ff;
+  --color-brand-300: #a9cbff;
+  --color-brand-400: #4fa6fe;
+  --color-brand-500: #2b7fff;
+  --color-brand-600: #1a6bef;
+  --color-brand-700: #1559d6;
+  --color-brand-800: #154fc0;
+  --color-brand-900: #123f96;
+
+  --color-ink: #0b1b33;
+  --color-ink-2: #4a5b78;
+  --color-ink-3: #5b6b86;
+  --color-line: #e3eaf5;
+  --color-surface: #f4f7fc;
+
+  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+
+  --shadow-card: 0 1px 2px rgb(27 58 107 / 0.04), 0 8px 24px rgb(27 58 107 / 0.06);
+  --shadow-lift: 0 2px 4px rgb(27 58 107 / 0.05), 0 18px 48px rgb(27 58 107 / 0.12);
+  --shadow-brand: 0 10px 30px rgb(43 127 255 / 0.35);
+
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-pulse-ring: pulse-ring 2.2s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+  --animate-caret: caret 1s step-end infinite;
+
+  @keyframes float {
+    0%,
+    100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  @keyframes pulse-ring {
+    0% {
+      transform: scale(0.9);
+      opacity: 0.55;
+    }
+    100% {
+      transform: scale(1.7);
+      opacity: 0;
+    }
+  }
+  @keyframes caret {
+    50% {
+      opacity: 0;
+    }
+  }
+}
+
+:root {
+  color-scheme: light;
+}
+
+@supports (interpolate-size: allow-keywords) {
+  :root {
+    interpolate-size: allow-keywords;
+  }
+}
+
+html {
+  scroll-behavior: smooth;
+  /* Anchor targets clear the sticky header. */
+  scroll-padding-top: 5.5rem;
+  -webkit-text-size-adjust: 100%;
+}
+
+body {
+  background: #ffffff;
+  color: var(--color-ink);
+  font-feature-settings: "cv11", "ss01";
+  text-rendering: optimizeLegibility;
+}
+
+::selection {
+  background: var(--color-brand-200);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--color-brand-600);
+  outline-offset: 3px;
+  border-radius: 6px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/*
+ * Scroll reveal (components/reveal.tsx). Hidden only when JS is running —
+ * the `js` class is set by an inline script in the layout before first paint.
+ */
+.js .reveal {
+  opacity: 0;
+  transform: translateY(24px);
+  transition:
+    opacity 0.7s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s),
+    transform 0.7s cubic-bezier(0.22, 1, 0.36, 1) var(--reveal-delay, 0s);
+}
+.js .reveal.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+/* Above-the-fold entrance: pure CSS, runs before hydration. */
+@keyframes fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(18px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.enter {
+  animation: fade-up 0.8s cubic-bezier(0.22, 1, 0.36, 1) both;
+  animation-delay: var(--enter-delay, 0s);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .js .reveal {
+    opacity: 1;
+    transform: none;
+  }
+  .enter {
+    animation: none;
+  }
+}
+
+/* A faint dotted grid that fades out toward the edges — hero background. */
+.bg-dots {
+  background-image: radial-gradient(rgb(43 127 255 / 0.18) 1px, transparent 1px);
+  background-size: 22px 22px;
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 40%, #000 30%, transparent 75%);
+}
+
+.text-gradient {
+  background: linear-gradient(100deg, #1a6bef 0%, #2b7fff 45%, #4fa6fe 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+}
+
+/* FAQ: native <details>, height-animated where the browser supports it. */
+details.faq::details-content {
+  block-size: 0;
+  overflow: hidden;
+  transition:
+    block-size 0.3s ease,
+    content-visibility 0.3s allow-discrete;
+}
+details.faq[open]::details-content {
+  block-size: auto;
+}
+details.faq summary::-webkit-details-marker {
+  display: none;
+}
+
+/* Typography plugin pinned to the brand. */
+.prose {
+  --tw-prose-body: var(--color-ink-2);
+  --tw-prose-headings: var(--color-ink);
+  --tw-prose-links: var(--color-brand-700);
+  --tw-prose-bold: var(--color-ink);
+  --tw-prose-bullets: var(--color-brand-500);
+  --tw-prose-counters: var(--color-ink-3);
+  --tw-prose-quotes: var(--color-ink);
+  --tw-prose-quote-borders: var(--color-brand-200);
+  --tw-prose-hr: var(--color-line);
+  --tw-prose-code: var(--color-ink);
+  --tw-prose-th-borders: var(--color-line);
+  --tw-prose-td-borders: var(--color-line);
+}

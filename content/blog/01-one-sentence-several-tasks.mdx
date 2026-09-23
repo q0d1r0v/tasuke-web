@@ -1,0 +1,97 @@
+---
+slug: how-tasuke-ai-turns-one-sentence-into-tasks
+title: How Tasuke AI turns one sentence into several tasks
+description: What happens between "Tomorrow at 3 PM send the build to Emily and Friday check App Store" and two saved tasks with the right dates and a reminder — all on your phone.
+date: 2026-09-23
+tags:
+  - how-it-works
+---
+
+Most to-do apps want a form: a title field, a date picker, a time picker, a save
+button — once per task. That is fine at a desk. It is useless when you are
+walking, driving, or halfway through something else and three things occur to
+you at once.
+
+Tasuke AI takes the opposite approach. You say everything in one go, the way you
+would say it to a person:
+
+> "Tomorrow at 3 PM send the build to Emily and Friday check App Store"
+
+and you get this back to confirm:
+
+| Task                    | Date              | Time    |
+| ----------------------- | ----------------- | ------- |
+| Send the build to Emily | tomorrow          | 3:00 PM |
+| Check App Store         | the coming Friday | —       |
+
+Here is what happens in between. All of it runs on your phone.
+
+## 1. Listening, without a recording
+
+While the recording screen is open, audio from the microphone is streamed
+straight into a speech-recognition model that ships inside the app. It is never
+saved as a file, and it is discarded as it is processed. When you stop, what
+remains is text.
+
+The model is an English speech model running on your phone's own processor, so
+there is no upload step and no server waiting on the other end. That is also why
+the app works in airplane mode.
+
+## 2. Finding where each task ends
+
+Real speech is messy. People say "um", change their mind mid-sentence ("at 4 —
+no wait, at 5"), string tasks together with "and", "then" or "also", and
+sometimes use "and" _inside_ a single task ("ask Bobur and Aziz to confirm the
+dinner").
+
+Tasuke AI splits the transcript into clauses with a set of language rules, then
+decides which clauses are separate tasks and which belong together. Filler words
+are dropped, and each title is cleaned up so it reads like something you would
+have typed: "Send the build to Emily", not "and um send the build to Emily".
+
+## 3. Reading the dates and times
+
+Each task is then checked for _when_: "tomorrow at 3", "Friday", "next Monday",
+"in two weeks", "the 14th", "tonight". Relative dates are resolved against the
+moment you spoke, so "Friday" said on a Wednesday means the Friday two days
+later. A date said once can apply to everything in the sentence — in "tomorrow,
+pack the suitcase and exchange some dollars", both tasks are for tomorrow.
+
+Some conventions are fixed so the result is predictable: "tonight" means 8:00 PM,
+and a task with a date but no time is an all-day task.
+
+## 4. You check it
+
+Speech recognition can mishear a word, and any automatic reading of language can
+pick the wrong Friday. So **nothing is saved until you have seen it.** The
+confirm screen shows every task with its date and time, and you can fix or
+remove anything before you tap Save.
+
+## 5. Reminders, scheduled by your phone
+
+Once saved, tasks go into a database inside the app's private storage, and every
+task with a time gets a local notification scheduled by your phone's operating
+system. There is no push server involved, which is why a reminder still arrives
+when the app is closed.
+
+## Why rules, and not a chatbot?
+
+The speech step uses a neural model. The splitting and date reading do not: they
+are deterministic rules.
+
+We tried a compact on-device language model for the extraction step. On notes it
+had never been tuned on, the rules produced the exactly right result far more
+often — 75% against 32% in our test at the time — and the model was removed. Rules
+have two other properties we care about: the same sentence always gives the same
+result, and they cannot invent a word you did not say.
+
+The rules are held to a large set of example notes in the app's test suite, and a
+change that fixes one phrasing but breaks others fails the build. The sentences in
+the demo on our home page come from that suite, and each result shown is what the
+extractor produces for it.
+
+## What it does not do (yet)
+
+It understands English only, because the built-in speech model is an English
+model. And it is not perfect — long, rambling notes with several dates are still
+the hardest case, which is exactly why the confirm screen exists.
