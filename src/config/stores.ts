@@ -14,7 +14,7 @@ export const stores = {
     comingSoon: "Coming soon to the App Store",
   },
   android: {
-    live: false,
+    live: true,
     packageName: "uz.digitalgroup.tasuke",
     url: "https://play.google.com/store/apps/details?id=uz.digitalgroup.tasuke",
     label: "Get it on Google Play",
